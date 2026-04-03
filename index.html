@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Займи малыша</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #fdfbf7;
+        }
+        
+        /* Стилизация радио-кнопок под карточки */
+        .radio-peer:checked + label {
+            border-color: #f97316; /* orange-500 */
+            background-color: #fff7ed; /* orange-50 */
+            box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.1), 0 2px 4px -1px rgba(249, 115, 22, 0.06);
+            transform: scale(1.02);
+        }
+
+        /* Выпадающий список */
+        .dropdown-content {
+            display: none;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.2s ease-out;
+        }
+        .dropdown-content.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Кастомный скроллбар для списка */
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background-color: #fed7aa;
+            border-radius: 4px;
+        }
+
+        /* Анимация появления результата */
+        .fade-in {
+            animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative overflow-x-hidden">
+
+    <div class="fixed top-[-5%] right-[-10%] w-64 h-64 bg-[#D0C5B1] rounded-full mix-blend-multiply filter blur-3xl opacity-40 z-0"></div>
+    <div class="fixed bottom-[-10%] left-[-10%] w-72 h-72 bg-orange-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 z-0"></div>
+
+    <div class="max-w-md w-full bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] p-6 md:p-8 space-y-8 relative z-10 border border-stone-100">
+        
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-orange-500 tracking-tight mb-2">🧸 Займи малыша</h1>
+            <p class="text-sm font-bold text-stone-400 uppercase tracking-wider">5 минут · подручные вещи · без экранов</p>
+        </div>
+
+        <form id="game-form" class="space-y-7">
+            
+            <div class="space-y-3">
+                <label class="block text-stone-700 font-bold ml-1 text-lg">Сколько лет ребёнку?</label>
+                <div class="grid grid-cols-4 gap-2">
+                    <div>
+                        <input type="radio" name="age" id="age-1" value="1-2" class="hidden radio-peer" checked>
+                        <label for="age-1" class="flex flex-col items-center justify-center p-3 border-2 border-stone-100 rounded-2xl cursor-pointer hover:bg-stone-50 transition-all duration-200">
+                            <span class="text-2xl mb-1 drop-shadow-sm">🐣</span>
+                            <span class="text-xs font-bold text-stone-600">1–2</span>
+                        </label>
+                    </div>
+                    <div>
+                        <input type="radio" name="age" id="age-2" value="3-4" class="hidden radio-peer">
+                        <label for="age-2" class="flex flex-col items-center justify-center p-3 border-2 border-stone-100 rounded-2xl cursor-pointer hover:bg-stone-50 transition-all duration-200">
+                            <span class="text-2xl mb-1 drop-shadow-sm">🧸</span>
+                            <span class="text-xs font-bold text-stone-600">3–4</span>
+                        </label>
+                    </div>
+                    <div>
+                        <input type="radio" name="age" id="age-3" value="5-6" class="hidden radio-peer">
+                        <label for="age-3" class="flex flex-col items-center justify-center p-3 border-2 border-stone-100 rounded-2xl cursor-pointer hover:bg-stone-50 transition-all duration-200">
+                            <span class="text-2xl mb-1 drop-shadow-sm">🚀</span>
+                            <span class="text-xs font-bold text-stone-600">5–6</span>
+                        </label>
+                    </div>
+                    <div>
+                        <input type="radio" name="age" id="age-4" value="7+" class="hidden radio-peer">
+                        <label for="age-4" class="flex flex-col items-center justify-center p-3 border-2 border-stone-100 rounded-2xl cursor-pointer hover:bg-stone-50 transition-all duration-200">
+                            <span class="text-2xl mb-1 drop-shadow-sm">🌟</span>
+                            <span class="text-xs font-bold text-stone-600">7+</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-3 relative">
+                <label class="block text-stone-700 font-bold ml-1 text-lg">Что есть под рукой?</label>
+                <button type="button" id="dropdown-btn" class="w-full flex items-center justify-between bg-white border-2 border-stone-100 rounded-2xl p-4 text-left text-stone-500 hover:bg-stone-50 transition-colors focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50">
+                    <span id="dropdown-text" class="truncate font-bold">Выбрать предметы...</span>
+                    <svg class="w-5 h-5 text-stone-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                
+                <div id="dropdown-menu" class="dropdown-content absolute z-30 w-full mt-2 bg-white border border-stone-100 rounded-2xl shadow-xl max-h-56 overflow-y-auto">
+                    <div class="p-2 space-y-1 flex flex-col" id="materials-list">
+                        </div>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <label class="block text-stone-700 font-bold ml-1 text-lg">Сколько времени есть?</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <input type="radio" name="time" id="time-1" value="3-5" class="hidden radio-peer" checked>
+                        <label for="time-1" class="flex items-center justify-center p-3 border-2 border-stone-100 rounded-2xl cursor-pointer hover:bg-stone-50 transition-all duration-200 text-sm font-bold text-stone-600">
+                            3–5 мин
+                        </label>
+                    </div>
+                    <div>
+                        <input type="radio" name="time" id="time-2" value="10" class="hidden radio-peer">
+                        <label for="time-2" class="flex items-center justify-center p-3 border-2 border-stone-100 rounded-2xl cursor-pointer hover:bg-stone-50 transition-all duration-200 text-sm font-bold text-stone-600">
+                            10 мин
+                        </label>
+                    </div>
+                    <div>
+                        <input type="radio" name="time" id="time-3" value="20+" class="hidden radio-peer">
+                        <label for="time-3" class="flex items-center justify-center p-3 border-2 border-stone-100 rounded-2xl cursor-pointer hover:bg-stone-50 transition-all duration-200 text-sm font-bold text-stone-600">
+                            20+ мин
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-gradient-to-r from-orange-400 to-amber-500 text-white font-bold text-xl rounded-2xl py-4 mt-4 shadow-[0_8px_20px_rgba(249,115,22,0.3)] hover:shadow-[0_10px_25px_rgba(249,115,22,0.4)] hover:-translate-y-0.5 transform transition-all active:translate-y-0 active:scale-[0.98]">
+                Дай игру! 🎲
+            </button>
+        </form>
+
+        <div id="result-block" class="hidden mt-6 bg-[#fdfaf5] border-2 border-amber-100 rounded-3xl p-6 relative z-10 shadow-sm">
+            <div class="absolute top-4 right-4 text-3xl opacity-20">💡</div>
+            <h2 id="res-title" class="text-2xl font-bold text-stone-800 mb-3 pr-8">Название игры</h2>
+            
+            <div class="flex flex-wrap gap-2 mb-5" id="res-tags">
+                </div>
+            
+            <div id="res-desc" class="text-stone-600 text-base leading-relaxed space-y-3 font-bold opacity-90">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // База данных игр (15+ штук)
+        const games = [
+            {
+                title: "Прятки «Ку-ку»",
+                ages: ["1-2", "3-4"],
+                materials: ["🤷‍♀️ Ничего"],
+                time: ["3-5", "10"],
+                desc: "1. Спрячьте лицо за ладонями.\n2. Спросите малыша: «А где мама/папа?»\n3. Резко откройте лицо с радостным возгласом «Ку-ку!»\n4. Детям постарше можно усложнить: прячьтесь за мебелью или дверью."
+            },
+            {
+                title: "Бумажный баскетбол",
+                ages: ["1-2", "3-4", "5-6"],
+                materials: ["бумага", "коробка"],
+                time: ["3-5", "10"],
+                desc: "1. Дайте ребенку бумагу и покажите, как скомкать её в плотные шарики.\n2. Поставьте пустую коробку на расстоянии пары шагов.\n3. Устройте соревнование: кто забросит больше «снежков» в корзину!\n4. Отлично развивает крупную моторику и меткость."
+            },
+            {
+                title: "Сенсорный салют",
+                ages: ["1-2"],
+                materials: ["бумага"],
+                time: ["3-5"],
+                desc: "1. Дайте малышу разные виды бумаги (салфетки, газеты, обычную).\n2. Позвольте от души рвать её на самые мелкие кусочки.\n3. Соберите кусочки в охапку и подбросьте вверх, как праздничный салют."
+            },
+            {
+                title: "Домашняя полоса препятствий",
+                ages: ["1-2", "3-4"],
+                materials: ["подушки"],
+                time: ["10", "20+"],
+                desc: "1. Разложите подушки на полу в линию, зигзагом или кругом.\n2. Задача ребенка: перешагивать, переползать или перепрыгивать с подушки на подушку.\n3. Можно добавить правило: «Пол — это горячая лава, наступать нельзя!»"
+            },
+            {
+                title: "Рыбалка в тазу",
+                ages: ["1-2", "3-4", "5-6"],
+                materials: ["вода", "крышки", "ложки"],
+                time: ["10", "20+"],
+                desc: "1. Налейте в глубокий таз немного воды и бросьте туда пластиковые крышки.\n2. Дайте ребенку столовую ложку или небольшой половник.\n3. Задача: выловить все крышки из воды и сложить их в отдельную емкость."
+            },
+            {
+                title: "Ёжик теряет иголки",
+                ages: ["1-2", "3-4"],
+                materials: ["прищепки", "коробка"],
+                time: ["10"],
+                desc: "1. Возьмите край плотной коробки.\n2. Нацепите прищепки по всему краю — это «иголки ежика».\n3. Попросите малыша аккуратно снять каждую прищепку, нажимая на неё.\n4. Затем предложите нацепить их обратно. Мощная тренировка для пальчиков!"
+            },
+            {
+                title: "Монстрики из ладошек",
+                ages: ["3-4", "5-6", "7+"],
+                materials: ["бумага", "карандаши/фломастеры"],
+                time: ["10", "20+"],
+                desc: "1. Положите ладонь ребенка на лист бумаги.\n2. Аккуратно обведите её контур фломастером.\n3. Включите фантазию: дорисуйте ладошке смешные глаза, рожки, зубы, превратив её в доброго монстра.\n4. Дайте ребенку раскрасить получившееся существо."
+            },
+            {
+                title: "Цветная сортировка",
+                ages: ["1-2", "3-4"],
+                materials: ["крышки"],
+                time: ["10"],
+                desc: "1. Соберите все имеющиеся крышки в одну большую кучу.\n2. Попросите ребенка разложить их на группы по цветам (красные к красным, зеленые к зеленым).\n3. Усложнение: предложите сортировать по размеру или выложить из них узор."
+            },
+            {
+                title: "Бесстрашный канатоходец",
+                ages: ["3-4", "5-6", "7+"],
+                materials: ["верёвка"],
+                time: ["3-5", "10"],
+                desc: "1. Разложите веревку на полу ровной линией (позже можно делать изгибы).\n2. Ребенок должен пройти по ней, ставя пятку вплотную к носку, стараясь не оступаться.\n3. Для тренировки баланса пусть вытянет руки в стороны или положит легкий предмет на голову."
+            },
+            {
+                title: "Быстрые ассоциации",
+                ages: ["5-6", "7+"],
+                materials: ["🤷‍♀️ Ничего"],
+                time: ["10", "20+"],
+                desc: "1. Вы называете любое слово (например, «Лето»).\n2. Ребенок быстро, без раздумий, называет первую ассоциацию (например, «Солнце»).\n3. Теперь вы придумываете ассоциацию на его слово («Жара») и так по цепочке.\n4. Играем, пока не кончатся идеи или пока не станет смешно!"
+            },
+            {
+                title: "Морские узлы",
+                ages: ["7+"],
+                materials: ["верёвка"],
+                time: ["10", "20+"],
+                desc: "1. Возьмите веревку и покажите ребенку, как вязать простой узел.\n2. Устройте соревнование: кто завяжет больше узелков на своей части веревки за 1 минуту.\n3. Вторая часть игры (развиваем терпение): кто быстрее распутает все узлы обратно."
+            },
+            {
+                title: "Забавные портреты",
+                ages: ["3-4", "5-6"],
+                materials: ["крышки", "прищепки", "карандаши/фломастеры"],
+                time: ["10", "20+"],
+                desc: "1. Высыпьте предметы на пол или стол.\n2. Используйте крышки как глаза, карандаши — как волосы или усы, прищепки — как уши.\n3. Соберите вместе смешную рожицу.\n4. Меняйте эмоции портрету, перекладывая предметы."
+            },
+            {
+                title: "Ложечная катапульта",
+                ages: ["5-6", "7+"],
+                materials: ["ложки", "бумага"],
+                time: ["10", "20+"],
+                desc: "1. Скатайте из бумаги маленькие плотные шарики-снаряды.\n2. Положите чайную ложку так, чтобы ручка свисала со стола (или подложите под середину карандаш).\n3. Кладите шарик в черпак, резко нажимайте на ручку — шарик летит!\n4. Установите мишень (например, кастрюлю) и тренируйте меткость."
+            },
+            {
+                title: "Секретный агент (Что пропало?)",
+                ages: ["3-4", "5-6"],
+                materials: ["🤷‍♀️ Ничего"],
+                time: ["3-5", "10"],
+                desc: "1. Разложите перед ребенком 5-7 любых безопасных мелких предметов, которые есть в комнате.\n2. Дайте ему 10 секунд на запоминание.\n3. Попросите отвернуться и спрячьте один предмет.\n4. Ребенок должен осмотреть стол и угадать, что именно исчезло."
+            },
+            {
+                title: "Бесконечная сказка",
+                ages: ["5-6", "7+"],
+                materials: ["🤷‍♀️ Ничего"],
+                time: ["10", "20+"],
+                desc: "1. Вы придумываете начало: «Жил-был на свете фиолетовый бегемот...»\n2. Ребенок добавляет одно предложение: «...который очень любил летать на воздушных шариках».\n3. Чередуйтесь, сплетая историю, пока она не придет к логичному или очень смешному финалу."
+            }
+        ];
+
+        // Логика кастомного выпадающего списка (Multi-select)
+        const dropdownBtn = document.getElementById('dropdown-btn');
+        const dropdownMenu = document.getElementById('dropdown-menu');
+        const dropdownText = document.getElementById('dropdown-text');
+        const materialsList = document.getElementById('materials-list');
+
+        const materialOptions = [
+            "бумага", "карандаши/фломастеры", "прищепки", "крышки", 
+            "коробка", "ложки", "верёвка", "подушки", "вода", "🤷‍♀️ Ничего"
+        ];
+
+        let selectedMaterials = new Set();
+
+        materialOptions.forEach(mat => {
+            const label = document.createElement('label');
+            label.className = "flex items-center p-3 hover:bg-orange-50 rounded-xl cursor-pointer transition-colors font-bold text-stone-600";
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = "checkbox";
+            checkbox.value = mat;
+            checkbox.className = "mr-3 w-5 h-5 text-orange-500 rounded border-stone-300 focus:ring-orange-400 cursor-pointer";
+            
+            checkbox.addEventListener('change', (e) => {
+                if (mat === "🤷‍♀️ Ничего") {
+                    if (e.target.checked) {
+                        selectedMaterials.clear();
+                        selectedMaterials.add(mat);
+                        document.querySelectorAll('#materials-list input[type="checkbox"]').forEach(cb => {
+                            if (cb.value !== "🤷‍♀️ Ничего") cb.checked = false;
+                        });
+                    } else {
+                        selectedMaterials.delete(mat);
+                    }
+                } else {
+                    if (e.target.checked) {
+                        selectedMaterials.add(mat);
+                        selectedMaterials.delete("🤷‍♀️ Ничего");
+                        const nothingCb = document.querySelector('input[value="🤷‍♀️ Ничего"]');
+                        if (nothingCb) nothingCb.checked = false;
+                    } else {
+                        selectedMaterials.delete(mat);
+                    }
+                }
+                updateDropdownText();
+            });
+
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(mat));
+            materialsList.appendChild(label);
+        });
+
+        function updateDropdownText() {
+            if (selectedMaterials.size === 0) {
+                dropdownText.textContent = "Выбрать предметы...";
+                dropdownText.classList.remove('text-stone-800');
+                dropdownText.classList.add('text-stone-500');
+            } else {
+                dropdownText.textContent = Array.from(selectedMaterials).join(', ');
+                dropdownText.classList.remove('text-stone-500');
+                dropdownText.classList.add('text-stone-800');
+            }
+        }
+
+        dropdownBtn.addEventListener('click', () => {
+            dropdownMenu.classList.toggle('show');
+        });
+
+        // Закрытие списка при клике вне его области
+        document.addEventListener('click', (e) => {
+            if (!dropdownBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.remove('show');
+            }
+        });
+
+        // Основная логика фильтрации и подбора игры
+        document.getElementById('game-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const age = document.querySelector('input[name="age"]:checked').value;
+            const time = document.querySelector('input[name="time"]:checked').value;
+            const mats = Array.from(selectedMaterials);
+            
+            if (mats.length === 0) mats.push("🤷‍♀️ Ничего");
+
+            let matches = [];
+
+            games.forEach(game => {
+                let ageMatch = game.ages.includes(age);
+                let timeMatch = game.time.includes(time);
+                
+                // Проверка: есть ли у пользователя ВСЕ необходимые предметы для этой игры
+                let hasMaterials = false;
+                if (game.materials.includes("🤷‍♀️ Ничего")) {
+                    hasMaterials = true; 
+                } else {
+                    if (!mats.includes("🤷‍♀️ Ничего")) {
+                        hasMaterials = game.materials.every(req => mats.includes(req));
+                    }
+                }
+
+                // Добавляем в кандидаты только те игры, в которые физически можно сыграть
+                if (hasMaterials) {
+                    let score = 0;
+                    if (ageMatch) score += 10;
+                    if (timeMatch) score += 5;
+                    // Даем приоритет играм с реальными предметами, если они выбраны
+                    if (!game.materials.includes("🤷‍♀️ Ничего")) score += 2; 
+                    
+                    matches.push({ game, score });
+                }
+            });
+
+            // Сортируем по максимальному совпадению
+            matches.sort((a, b) => b.score - a.score);
+
+            let resultGame = null;
+
+            if (matches.length > 0 && matches[0].score >= 10) {
+                // Идеальное совпадение (как минимум по возрасту и инвентарю)
+                resultGame = matches[0].game;
+            } else {
+                // Фолбэк: подбираем универсальную игру без предметов для этого возраста
+                const fallbacks = games.filter(g => g.materials.includes("🤷‍♀️ Ничего") && g.ages.includes(age));
+                if (fallbacks.length > 0) {
+                    resultGame = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+                } else {
+                    resultGame = games.find(g => g.materials.includes("🤷‍♀️ Ничего"));
+                }
+            }
+
+            renderResult(resultGame);
+        });
+
+        // Отрисовка результата на экране
+        function renderResult(game) {
+            const resBlock = document.getElementById('result-block');
+            const resTitle = document.getElementById('res-title');
+            const resTags = document.getElementById('res-tags');
+            const resDesc = document.getElementById('res-desc');
+
+            resBlock.classList.remove('hidden');
+            
+            // Перезапуск анимации
+            resBlock.classList.remove('fade-in');
+            void resBlock.offsetWidth; 
+            resBlock.classList.add('fade-in');
+
+            resTitle.textContent = game.title;
+            
+            resTags.innerHTML = '';
+            const createTag = (text, bgClass) => {
+                const span = document.createElement('span');
+                span.className = `px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase ${bgClass}`;
+                span.textContent = text;
+                resTags.appendChild(span);
+            };
+
+            createTag(game.ages.join(', ') + ' лет', 'bg-orange-100 text-orange-700');
+            createTag(game.time.join(', ') + ' мин', 'bg-amber-100 text-amber-700');
+            game.materials.forEach(m => {
+                createTag(m, 'bg-stone-200 text-stone-700');
+            });
+
+            // Парсинг описания (переносы строк в параграфы)
+            resDesc.innerHTML = game.desc.split('\n').map(line => `<p class="flex items-start"><span class="mr-2 text-orange-400">•</span> <span>${line.replace(/^\d+\.\s/, '')}</span></p>`).join('');
+            
+            // Плавный скролл к результату
+            setTimeout(() => {
+                resBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+    </script>
+</body>
+</html>
