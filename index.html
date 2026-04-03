@@ -416,10 +416,20 @@
             }
         });
 
-        // Основная логика фильтрации и подбора игры
+        let currentGameTitle = ""; // Запоминаем текущую игру, чтобы не повторять
+
+        // Основная логика фильтрации
         document.getElementById('game-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            
+            generateGame();
+        });
+
+        // Слушатель для новой кнопки "Другая игра"
+        document.getElementById('next-game-btn').addEventListener('click', () => {
+            generateGame();
+        });
+
+        function generateGame() {
             const age = document.querySelector('input[name="age"]:checked').value;
             const time = document.querySelector('input[name="time"]:checked').value;
             const mats = Array.from(selectedMaterials);
@@ -432,7 +442,6 @@
                 let ageMatch = game.ages.includes(age);
                 let timeMatch = game.time.includes(time);
                 
-                // Проверка: есть ли у пользователя ВСЕ необходимые предметы для этой игры
                 let hasMaterials = false;
                 if (game.materials.includes("🤷‍♀️ Ничего")) {
                     hasMaterials = true; 
@@ -442,39 +451,47 @@
                     }
                 }
 
-                // Добавляем в кандидаты только те игры, в которые физически можно сыграть
                 if (hasMaterials) {
                     let score = 0;
                     if (ageMatch) score += 10;
                     if (timeMatch) score += 5;
-                    // Даем приоритет играм с реальными предметами, если они выбраны
                     if (!game.materials.includes("🤷‍♀️ Ничего")) score += 2; 
-                    
                     matches.push({ game, score });
                 }
             });
 
-            // Сортируем по максимальному совпадению
+            // Сортируем по очкам (от лучших к худшим)
             matches.sort((a, b) => b.score - a.score);
 
-            let resultGame = null;
+            let topGames = [];
 
             if (matches.length > 0 && matches[0].score >= 10) {
-                // Идеальное совпадение (как минимум по возрасту и инвентарю)
-                resultGame = matches[0].game;
+                // Берем ВСЕ игры, которые набрали максимальный балл для этих фильтров
+                const maxScore = matches[0].score;
+                topGames = matches.filter(m => m.score === maxScore).map(m => m.game);
             } else {
-                // Фолбэк: подбираем универсальную игру без предметов для этого возраста
+                // Фолбэк: игры без инвентаря
                 const fallbacks = games.filter(g => g.materials.includes("🤷‍♀️ Ничего") && g.ages.includes(age));
-                if (fallbacks.length > 0) {
-                    resultGame = fallbacks[Math.floor(Math.random() * fallbacks.length)];
-                } else {
-                    resultGame = games.find(g => g.materials.includes("🤷‍♀️ Ничего"));
-                }
+                topGames = fallbacks.length > 0 ? fallbacks : [games.find(g => g.materials.includes("🤷‍♀️ Ничего"))];
             }
 
-            renderResult(resultGame);
-        });
+            // Исключаем игру, которая уже открыта на экране (чтобы не было дублей подряд)
+            let availableGames = topGames.filter(g => g.title !== currentGameTitle);
+            
+            // Если подходящая игра всего одна (или все остальные не подошли), берем из того, что есть
+            if (availableGames.length === 0) {
+                availableGames = topGames;
+            }
 
+            // Выбираем случайную игру из лучших совпадений
+            const resultGame = availableGames[Math.floor(Math.random() * availableGames.length)];
+            
+            // Запоминаем её название
+            currentGameTitle = resultGame.title;
+
+            renderResult(resultGame);
+        }
+        
         // Отрисовка результата на экране
         function renderResult(game) {
             const resBlock = document.getElementById('result-block');
