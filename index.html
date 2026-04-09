@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Займи малыша</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -173,6 +174,25 @@
         }
 
         loadGames(); // предзагрузка при открытии страницы
+
+        // ── Telegram Mini App auth ─────────────────────────────────────────────────
+        async function initTelegramAuth() {
+            const tg = window.Telegram?.WebApp;
+            if (!tg?.initData) return; // открыт не в Telegram — пропускаем
+            tg.ready();
+            try {
+                const res = await fetch('https://bqnfjblrgtdqdmszohze.supabase.co/functions/v1/telegram-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ initData: tg.initData })
+                });
+                const data = await res.json();
+                if (data.user) window._tgUser = data.user;
+            } catch (e) {
+                console.error('Telegram auth error:', e);
+            }
+        }
+        initTelegramAuth();
 
         // ── Логика выпадающего списка ──────────────────────────────────────────────
         const dropdownBtn = document.getElementById('dropdown-btn');
