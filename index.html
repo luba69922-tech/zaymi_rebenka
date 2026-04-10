@@ -50,6 +50,12 @@
             from { opacity: 0; transform: translateY(15px); }
             to   { opacity: 1; transform: translateY(0); }
         }
+
+        .desc-blur {
+            filter: blur(5px);
+            user-select: none;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4 relative overflow-x-hidden">
@@ -147,7 +153,17 @@
 
             <div class="flex flex-wrap gap-2 mb-5" id="res-tags"></div>
 
-            <div id="res-desc" class="text-stone-600 text-base leading-relaxed space-y-3 font-bold opacity-90"></div>
+            <div class="relative">
+                <div id="res-desc" class="text-stone-600 text-base leading-relaxed space-y-3 font-bold opacity-90"></div>
+                <div id="paywall-overlay" class="hidden absolute inset-0 flex flex-col items-center justify-center rounded-2xl z-10 p-4 text-center" style="background: linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.97) 35%);">
+                    <p class="text-3xl mb-2">🔒</p>
+                    <p class="font-bold text-stone-800 text-lg mb-1">Пробный период закончился</p>
+                    <p class="text-stone-500 text-sm mb-4">Получи полный доступ навсегда</p>
+                    <button id="pay-btn" class="bg-gradient-to-r from-orange-400 to-amber-500 text-white font-bold text-lg rounded-2xl px-8 py-3 shadow-[0_8px_20px_rgba(249,115,22,0.3)] hover:-translate-y-0.5 transform transition-all active:scale-[0.98]">
+                        Купить за 490 ₽
+                    </button>
+                </div>
+            </div>
 
             <button id="next-game-btn" type="button" class="mt-5 w-full bg-white text-orange-500 border-2 border-orange-300 font-bold text-base rounded-2xl py-3 hover:bg-orange-50 transition-all active:scale-[0.98]">
                 🔄 Другая игра
@@ -187,12 +203,15 @@
                     body: JSON.stringify({ initData: tg.initData })
                 });
                 const data = await res.json();
-                if (data.user) window._tgUser = data.user;
+                if (data.user) {
+                    window._tgUser = data.user;
+                    window._tgAccess = data.hasAccess;
+                }
             } catch (e) {
                 console.error('Telegram auth error:', e);
             }
         }
-        initTelegramAuth();
+        window._tgAuthPromise = initTelegramAuth();
 
         // ── Логика выпадающего списка ──────────────────────────────────────────────
         const dropdownBtn = document.getElementById('dropdown-btn');
@@ -362,8 +381,28 @@
             await generateGame();
         });
 
+        function applyPaywall() {
+            const tg = window.Telegram?.WebApp;
+            if (!tg?.initData) return; // в браузере — всё открыто
+            const overlay = document.getElementById('paywall-overlay');
+            const resDesc = document.getElementById('res-desc');
+            if (window._tgAccess === false) {
+                resDesc.classList.add('desc-blur');
+                overlay.classList.remove('hidden');
+            } else {
+                resDesc.classList.remove('desc-blur');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('pay-btn').addEventListener('click', async () => {
+            // Шаг 4 — будет реализован с Edge Function create-payment
+            alert('Оплата будет доступна в ближайшее время');
+        });
+
         async function generateGame() {
             await loadGames();
+            if (window._tgAuthPromise) await window._tgAuthPromise;
             const age = document.querySelector('input[name="age"]:checked').value;
             const time = document.querySelector('input[name="time"]:checked').value;
             const mats = Array.from(selectedMaterials);
@@ -445,6 +484,8 @@
             resDesc.innerHTML = game.description.split('\n').map(line =>
                 `<p class="flex items-start"><span class="mr-2 text-orange-400">•</span> <span>${line.replace(/^\d+\.\s/, '')}</span></p>`
             ).join('');
+
+            applyPaywall();
 
             setTimeout(() => {
                 resBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
