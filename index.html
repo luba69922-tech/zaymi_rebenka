@@ -396,8 +396,31 @@
         }
 
         document.getElementById('pay-btn').addEventListener('click', async () => {
-            // Шаг 4 — будет реализован с Edge Function create-payment
-            alert('Оплата будет доступна в ближайшее время');
+            const tg = window.Telegram?.WebApp;
+            if (!window._tgUser) return;
+            const btn = document.getElementById('pay-btn');
+            btn.textContent = 'Загрузка...';
+            btn.disabled = true;
+            try {
+                const res = await fetch('https://bqnfjblrgtdqdmszohze.supabase.co/functions/v1/create-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegram_id: window._tgUser.telegram_id })
+                });
+                const data = await res.json();
+                if (data.confirmation_url) {
+                    if (tg?.openLink) {
+                        tg.openLink(data.confirmation_url);
+                    } else {
+                        window.open(data.confirmation_url, '_blank');
+                    }
+                }
+            } catch (e) {
+                console.error('Payment error:', e);
+            } finally {
+                btn.textContent = 'Купить за 490 ₽';
+                btn.disabled = false;
+            }
         });
 
         async function generateGame() {
