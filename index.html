@@ -147,6 +147,12 @@
             </button>
         </form>
 
+        <div class="text-center -mt-4 pb-1">
+            <button onclick="openFeedback()" class="text-stone-300 text-xs font-bold hover:text-orange-400 transition-colors">
+                💬 Оставить отзыв
+            </button>
+        </div>
+
         <div id="trial-banner" class="hidden text-center text-sm text-stone-400 font-bold -mt-2 pb-1">
             ⏳ Пробный период: осталось <span id="trial-days"></span>
         </div>
@@ -385,6 +391,15 @@
         document.getElementById('next-game-btn').addEventListener('click', async () => {
             await generateGame();
         });
+
+        function openFeedback() {
+            const tg = window.Telegram?.WebApp;
+            if (tg?.openTelegramLink) {
+                tg.openTelegramLink('https://t.me/zaymi_malisha_bot');
+            } else {
+                window.open('https://t.me/zaymi_malisha_bot', '_blank');
+            }
+        }
 
         function showTrialBanner() {
             const tg = window.Telegram?.WebApp;
