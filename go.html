@@ -46,6 +46,46 @@
             line-height: 1.6;
         }
         #fallback { display: none; }
+
+        /* Стрелка в угол экрана */
+        .corner-tip {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 160px;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        .corner-tip svg {
+            width: 100%;
+            height: auto;
+        }
+        .corner-label {
+            position: fixed;
+            top: 56px;
+            right: 8px;
+            background: #1c1c1e;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.4;
+            padding: 8px 12px;
+            border-radius: 12px;
+            max-width: 170px;
+            text-align: center;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+        .corner-label::before {
+            content: '';
+            position: absolute;
+            top: -7px;
+            right: 18px;
+            border: 7px solid transparent;
+            border-bottom-color: #1c1c1e;
+            border-top: 0;
+        }
     </style>
 </head>
 <body>
@@ -63,9 +103,13 @@
                 Открыть в Telegram
             </a>
             <p class="hint">
-                Если кнопка не работает — скопируй ссылку и открой в браузере:<br>
-                <strong>t.me/zaymi_malisha_bot</strong>
+                Если кнопка не работает — нажми <strong>⋯</strong> в правом верхнем углу и выбери <strong>«Открыть в браузере»</strong>
             </p>
+        </div>
+
+        <!-- Стрелка и подсказка, появляются вместе с fallback -->
+        <div class="corner-label" id="corner-label" style="display:none;">
+            Нажми сюда →<br>«Открыть в браузере»
         </div>
     </div>
 
@@ -77,6 +121,7 @@
         setTimeout(function() {
             document.getElementById('auto').style.display = 'none';
             document.getElementById('fallback').style.display = 'block';
+            document.getElementById('corner-label').style.display = 'block';
         }, 1500);
     </script>
 </body>
